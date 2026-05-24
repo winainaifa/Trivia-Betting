@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Trivia Betting Challenge | เกมทายคำถามเดิมพันแต้ม</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Prompt:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="bg-glow-secondary"></div>
+
+    <div class="game-wrapper">
+        <!-- Audio Control -->
+        <button id="mute-btn" class="audio-control-btn" title="เปิด/ปิดเสียง">
+            <i class="fas fa-volume-up"></i>
+        </button>
+
+        <div class="card glass-card">
+            <!-- Game Header (Visible during active gameplay) -->
+            <div id="game-header" class="game-header hidden">
+                <div class="header-stat">
+                    <span class="stat-label">คำถาม</span>
+                    <span id="question-progress" class="stat-value">1/10</span>
+                </div>
+                <div class="header-progress">
+                    <div id="progress-bar-fill" class="progress-bar-fill" style="width: 10%;"></div>
+                </div>
+                <div class="header-stat score-container">
+                    <span class="stat-label">คะแนนสะสม</span>
+                    <span id="score-display" class="stat-value pulse-text">100</span>
+                    <div id="score-float" class="score-float"></div>
+                </div>
+            </div>
+
+            <!-- Timer Bar (Visible during active gameplay questions/betting) -->
+            <div id="timer-wrapper" class="timer-wrapper hidden">
+                <div id="timer-bar" class="timer-bar"></div>
+                <div class="timer-text-container">
+                    <i class="far fa-clock"></i> เหลือเวลา: <span id="timer-text">10</span> วินาที
+                </div>
+            </div>
+
+            <!-- Screen 1: Start/Intro Screen -->
+            <div id="start-screen" class="game-screen active">
+                <div class="hero-logo">
+                    <div class="logo-icon"><i class="fas fa-coins"></i></div>
+                    <h1>TRIVIA<br><span class="gradient-text">BETTING</span></h1>
+                    <p class="subtitle">เกมทายปัญหาเดิมพันท้าทายสมอง</p>
+                </div>
+                <div class="rules-box">
+                    <h3><i class="fas fa-info-circle"></i> กติกาการเล่น</h3>
+                    <ul>
+                        <li><span class="badge">1</span> เริ่มต้นด้วยคะแนนสะสม <strong>100 คะแนน</strong></li>
+                        <li><span class="badge">2</span> เห็นคำถามแล้วคุณต้อง <strong>"วางเดิมพันก่อน"</strong> ภายใน 10 วินาที</li>
+                        <li><span class="badge">3</span> จากนั้นจะมีเวลา 10 วินาทีในการ <strong>"เลือกคำตอบ"</strong></li>
+                        <li><span class="badge">4</span> ตอบถูกได้รับคะแนนเพิ่มเท่าที่เดิมพัน ตอบผิดจะถูกหักคะแนนตามที่เดิมพัน</li>
+                        <li><span class="badge warning">5</span> <strong>เกมจะจบทันทีหากคะแนนหมด (เหลือ 0 หรือน้อยกว่า)</strong></li>
+                    </ul>
+                </div>
+                <button id="start-game-btn" class="btn btn-primary btn-glow">
+                    เริ่มเกมเดิมพัน <i class="fas fa-play"></i>
+                </button>
+            </div>
+
+            <!-- Screen 2: Betting Screen -->
+            <div id="bet-screen" class="game-screen hidden">
+                <div class="screen-title">
+                    <i class="fas fa-hand-holding-dollar title-icon"></i>
+                    <h2>เลือกเงินเดิมพันของคุณ</h2>
+                </div>
+                <div class="question-preview-box">
+                    <p class="question-label">โจทย์คำถาม:</p>
+                    <p id="bet-question-text" class="question-text">คำถามจะปรากฏตรงนี้...</p>
+                </div>
+                <div class="bet-options-grid">
+                    <!-- Dynamic Bets Buttons -->
+                    <button class="bet-btn" data-bet-type="1">
+                        <span class="bet-label">เดิมพันน้อย</span>
+                        <span class="bet-amount" id="bet-opt-1">10</span>
+                        <span class="points-suffix">คะแนน</span>
+                    </button>
+                    <button class="bet-btn" data-bet-type="2">
+                        <span class="bet-label">เดิมพันปานกลาง</span>
+                        <span class="bet-amount" id="bet-opt-2">30</span>
+                        <span class="points-suffix">คะแนน</span>
+                    </button>
+                    <button class="bet-btn" data-bet-type="3">
+                        <span class="bet-label">เดิมพันสูง</span>
+                        <span class="bet-amount" id="bet-opt-3">50</span>
+                        <span class="points-suffix">คะแนน</span>
+                    </button>
+                    <button class="bet-btn bet-btn-allin" data-bet-type="4">
+                        <span class="bet-label">เทหมดหน้าตัก</span>
+                        <span class="bet-amount" id="bet-opt-4">100</span>
+                        <span class="points-suffix">คะแนน</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Screen 3: Answer Screen -->
+            <div id="answer-screen" class="game-screen hidden">
+                <div class="screen-title">
+                    <div class="bet-badge-container">
+                        เดิมพัน: <span id="current-bet-badge" class="bet-badge">50</span> คะแนน
+                    </div>
+                </div>
+                <div class="question-box">
+                    <p id="answer-question-text" class="question-text">คำถามจะปรากฏตรงนี้...</p>
+                </div>
+                <div class="answers-grid" id="answers-container">
+                    <!-- Answer Buttons will be generated dynamically -->
+                </div>
+                <div id="feedback-box" class="feedback-box hidden">
+                    <div class="feedback-icon"></div>
+                    <div class="feedback-message"></div>
+                </div>
+            </div>
+
+            <!-- Screen 4: Game Over Screen -->
+            <div id="gameover-screen" class="game-screen hidden">
+                <div class="result-icon error-color"><i class="fas fa-skull-crossbones"></i></div>
+                <h2 class="error-color">GAME OVER</h2>
+                <p id="gameover-reason" class="result-message">คะแนนสะสมของคุณหมดเกลี้ยงแล้ว!</p>
+                <div class="stats-summary">
+                    <div class="stat-card">
+                        <span class="stat-card-label">เล่นไปได้</span>
+                        <span class="stat-card-value" id="gameover-progress">3 / 10 ข้อ</span>
+                    </div>
+                </div>
+                <button id="retry-game-btn" class="btn btn-danger btn-glow">
+                    ลองใหม่อีกครั้ง <i class="fas fa-redo"></i>
+                </button>
+            </div>
+
+            <!-- Screen 5: Victory Screen -->
+            <div id="victory-screen" class="game-screen hidden">
+                <div class="result-icon success-color"><i class="fas fa-trophy"></i></div>
+                <h2 class="success-color">ภารกิจสำเร็จ!</h2>
+                <p class="result-message">ยอดเยี่ยมมาก! คุณผ่านคำถามครบทั้งหมด 10 ข้อ</p>
+                <div class="victory-stats">
+                    <div class="final-score-box">
+                        <span class="final-label">คะแนนสุดท้ายของคุณ</span>
+                        <span id="final-score-display" class="final-score">320</span>
+                        <span class="points-suffix">คะแนน</span>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-item-label"><i class="fas fa-check-circle success-color"></i> ตอบถูก</span>
+                            <span class="stat-item-value" id="stat-correct">8 / 10</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-item-label"><i class="fas fa-times-circle error-color"></i> ตอบผิด/หมดเวลา</span>
+                            <span class="stat-item-value" id="stat-incorrect">2 / 10</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-item-label"><i class="fas fa-chart-line accent-color"></i> เดิมพันสูงสุด</span>
+                            <span class="stat-item-value" id="stat-max-bet">100 แต้ม</span>
+                        </div>
+                    </div>
+                </div>
+                <button id="restart-game-btn" class="btn btn-success btn-glow">
+                    เล่นใหม่อีกครั้ง <i class="fas fa-redo"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background music & sound synthezier script -->
+    <script src="app.js?v=3"></script>
+</body>
+</html>
