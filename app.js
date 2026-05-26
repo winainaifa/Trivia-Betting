@@ -1,54 +1,65 @@
-// Questions Database
-const questions = [
+// !!! REPLACE THIS WITH YOUR ACTUAL GEMINI API KEY FROM GOOGLE AI STUDIO !!!
+const GEMINI_API_KEY = "AIzaSyBpvQA_jJeR_TjYhs5VnJiGvRgxmZsMXds";
+
+// Global array for questions currently being played
+let activeQuestions = [];
+
+// Questions Database (Local Fallback - Sorted Easy to Hard)
+const localFallbackQuestions = [
     {
-        question: "ประเทศใดมีพื้นที่ใหญ่ที่สุดในโลก?",
-        options: ["รัสเซีย", "แคนาดา", "จีน", "สหรัฐอเมริกา"],
+        question: "เมืองหลวงของประเทศฝรั่งเศสคือเมืองอะไร?",
+        options: ["ปารีส", "ลอนดอน", "โรม", "มาดริด"],
         answer: 0
     },
     {
-        question: "อวัยวะใดของร่างกายมนุษย์ที่มีขนาดใหญ่ที่สุด?",
-        options: ["สมอง", "ผิวหนัง", "ตับ", "ปอด"],
-        answer: 1
-    },
-    {
-        question: "มหาสมุทรใดมีขนาดใหญ่ที่สุดในโลก?",
-        options: ["แอตแลนติก", "อินเดีย", "แปซิฟิก", "อาร์กติก"],
-        answer: 2
-    },
-    {
-        question: "ดาวเคราะห์ดวงใดในระบบสุริยะที่มีดวงจันทร์บริวารมากที่สุด?",
-        options: ["ดาวพฤหัสบดี", "ดาวเสาร์", "ดาวยูเรนัส", "ดาวเนปจูน"],
-        answer: 1
-    },
-    {
-        question: "สัตว์เลี้ยงลูกด้วยนมที่บินได้ชนิดเดียวในโลกคืออะไร?",
-        options: ["ค้างคาว", "กระรอกบิน", "นกแพนกวิน", "นกฮูก"],
+        question: "ดาวเคราะห์ดวงใดอยู่ใกล้ดวงอาทิตย์มากที่สุดในระบบสุริยะ?",
+        options: ["ดาวพุธ", "ดาวศุกร์", "โลก", "ดาวอังคาร"],
         answer: 0
     },
     {
-        question: "ธาตุเคมีที่มีสัญลักษณ์เป็น \"Au\" คือธาตุอะไร?",
-        options: ["เงิน", "ทองแดง", "ทองคำ", "เหล็ก"],
-        answer: 2
-    },
-    {
-        question: "กำแพงเมืองจีนสร้างขึ้นในยุคราชวงศ์ใดเป็นหลักเพื่อป้องกันการรุกราน?",
-        options: ["ราชวงศ์ถัง", "ราชวงศ์ฉินและหมิง", "ราชวงศ์ฮั่น", "ราชวงศ์ซ่ง"],
-        answer: 1
-    },
-    {
-        question: "เมืองหลวงของประเทศออสเตรเลียคือเมืองอะไร?",
-        options: ["ซิดนีย์", "เมลเบิร์น", "แคนเบอร์รา", "บริสเบน"],
-        answer: 2
-    },
-    {
-        question: "วงแหวนแห่งไฟ (Ring of Fire) ตั้งอยู่ในมหาสมุทรใด?",
-        options: ["แปซิฟิก", "แอตแลนติก", "อินเดีย", "อาร์กติก"],
+        question: "แม่น้ำสายที่ยาวที่สุดในโลกคือแม่น้ำสายใด?",
+        options: ["แม่น้ำไนล์", "แม่น้ำอเมซอน", "แม่น้ำแยงซี", "แม่น้ำมิสซิสซิปปี"],
         answer: 0
     },
     {
-        question: "สิ่งมีชีวิตชนิดใดที่มีหัวใจมากถึง 3 ดวง?",
-        options: ["ดาวทะเล", "หมึกยักษ์", "ปลากระเบน", "แมงกะพรุน"],
-        answer: 1
+        question: "ใครคือผู้ประดิษฐ์หลอดไฟคนแรกของโลก?",
+        options: ["โทมัส อัลวา เอดิสัน", "อัลเบิร์ต ไอน์สไตน์", "นิกโคลา เทสลา", "อเล็กซานเดอร์ เกรแฮม เบลล์"],
+        answer: 0
+    },
+    {
+        question: "สิ่งมีชีวิตใดเป็นสัตว์เลี้ยงลูกด้วยนมที่วางไข่ได้?",
+        options: ["ตุ่นปากเป็ด", "จิงโจ้", "ค้างคาว", "วอลรัส"],
+        answer: 0
+    },
+    {
+        question: "มหาสมุทรที่ลึกที่สุดในโลกคือมหาสมุทรใดและจุดที่ลึกที่สุดเรียกว่าอะไร?",
+        options: [
+            "มหาสมุทรแปซิฟิก - ร่องลึกมาเรียนา",
+            "มหาสมุทรแอตแลนติก - ร่องลึกเปอร์โตริโก",
+            "มหาสมุทรอินเดีย - ร่องลึกชวา",
+            "มหาสมุทรอาร์กติก - ร่องลึกยูเรเชีย"
+        ],
+        answer: 0
+    },
+    {
+        question: "สงครามร้อยปี (Hundred Years' War) เป็นสงครามระหว่างสองประเทศใด?",
+        options: ["อังกฤษและฝรั่งเศส", "ฝรั่งเศสและเยอรมนี", "สเปนและโปรตุเกส", "อิตาลีและกรีซ"],
+        answer: 0
+    },
+    {
+        question: "ก๊าซที่พบมากที่สุดในชั้นบรรยากาศของโลกคือก๊าซอะไร?",
+        options: ["ไนโตรเจน", "ออกซิเจน", "คาร์บอนไดออกไซด์", "อาร์กอน"],
+        answer: 0
+    },
+    {
+        question: "ใครคือผู้เขียนวรรณกรรมชิ้นเอกของโลกเรื่อง \"Don Quixote\" (ดอน กิโฆเต้)?",
+        options: ["มิเกล เด เซร์บันเตส", "วิลเลียม เชกสเปียร์", "วิกเตอร์ อูโก", "ลีโอ ตอลสตอย"],
+        answer: 0
+    },
+    {
+        question: "ธาตุที่หายากที่สุดและมีความเสถียรน้อยที่สุดบนเปลือกโลกตามธรรมชาติคือธาตุใด?",
+        options: ["แอสทาทีน", "แฟรนเซียม", "เรเดียม", "โพลอนีเซียม"],
+        answer: 0
     }
 ];
 
@@ -379,14 +390,124 @@ startGameBtn.addEventListener('click', () => {
     setupNewGame();
 });
 
+// Fetch questions dynamically from Google Gemini 1.5 Flash API
+async function fetchAIQuestions() {
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_API_KEY_HERE" || GEMINI_API_KEY.trim() === "") {
+        throw new Error("API Key is missing or using default placeholder.");
+    }
+    
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    
+    const prompt = "สร้างคำถามทายปัญหาความรู้ทั่วไปเกี่ยวกับประวัติศาสตร์ ภูมิศาสตร์ วิทยาศาสตร์ วัฒนธรรม และข้อเท็จจริงจากทั่วโลกจำนวน 10 ข้อ " +
+                   "โดยเรียงลำดับระดับความยากจากง่ายไปยากที่สุด (ข้อ 1 ง่ายที่สุด และค่อยๆ ยากขึ้นจนถึงข้อ 10 ยากที่สุดระดับเซียนตอบ) " +
+                   "ให้ผลลัพธ์เป็น JSON Array ที่มีโครงสร้างตรงตามรูปแบบต่อไปนี้เท่านั้น:\n" +
+                   "[\n" +
+                   "  {\n" +
+                   "    \"question\": \"คำถาม...\",\n" +
+                   "    \"options\": [\"ตัวเลือก 1\", \"ตัวเลือก 2\", \"ตัวเลือก 3\", \"ตัวเลือก 4\"],\n" +
+                   "    \"answer\": 0\n" +
+                   "  }\n" +
+                   "]\n" +
+                   "ฟิลด์ answer ต้องเป็นเลขจำนวนเต็มดัชนี 0 ถึง 3 เท่านั้น ห้ามส่งข้อความคำนำหรือลงท้ายใดๆ หรือเครื่องหมาย markdown codeblock ให้ส่งเฉพาะเนื้อหา JSON อาเรย์ตรงๆ";
+    
+    const payload = {
+        contents: [{
+            parts: [{
+                text: prompt
+            }]
+        }],
+        generationConfig: {
+            responseMimeType: "application/json"
+        }
+    };
+    
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+    });
+    
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const rawText = data.candidates[0].content.parts[0].text;
+    const parsedQuestions = JSON.parse(rawText.trim());
+    
+    if (!Array.isArray(parsedQuestions) || parsedQuestions.length !== 10) {
+        throw new Error("AI returned incorrect questions count or structure.");
+    }
+    
+    // Basic verification
+    parsedQuestions.forEach((q, idx) => {
+        if (!q.question || !Array.isArray(q.options) || q.options.length !== 4 || typeof q.answer !== 'number') {
+            throw new Error(`Schema mismatch at index ${idx}`);
+        }
+    });
+    
+    return parsedQuestions;
+}
+
 // Setup New Game
-function setupNewGame() {
+const startStatus = document.getElementById('start-status');
+
+async function setupNewGame() {
     state.score = 100;
     state.currentQuestionIndex = 0;
     state.correctCount = 0;
     state.incorrectCount = 0;
     state.maxBetPlaced = 0;
     
+    // Switch immediately to Start Screen to show loading progress
+    showScreen(startScreen);
+    gameHeader.classList.add('hidden');
+    timerWrapper.classList.add('hidden');
+    
+    // Show Loading feedback and disable all play buttons to prevent double click
+    startStatus.textContent = "กำลังเชื่อมต่อ Gemini AI เพื่อสร้างคำถามใหม่...";
+    startStatus.className = "start-status";
+    startStatus.classList.remove('hidden');
+    
+    startGameBtn.disabled = true;
+    retryGameBtn.disabled = true;
+    restartGameBtn.disabled = true;
+    
+    try {
+        activeQuestions = await fetchAIQuestions();
+        
+        startStatus.textContent = "สร้างคำถามสำเร็จ!";
+        startStatus.className = "start-status success";
+        
+        setTimeout(() => {
+            startGameBtn.disabled = false;
+            retryGameBtn.disabled = false;
+            restartGameBtn.disabled = false;
+            startStatus.classList.add('hidden');
+            proceedToGame();
+        }, 800);
+    } catch (err) {
+        console.warn("Gemini API failed or key missing. Swapping to local fallback pool.", err);
+        
+        startStatus.textContent = "ไม่สามารถเชื่อมต่อ AI ได้ กำลังสลับไปใช้คำถามสำรอง...";
+        startStatus.className = "start-status error";
+        
+        // Copy the local fallback questions directly to keep the easy-to-hard sorting order
+        activeQuestions = [...localFallbackQuestions];
+        
+        setTimeout(() => {
+            startGameBtn.disabled = false;
+            retryGameBtn.disabled = false;
+            restartGameBtn.disabled = false;
+            startStatus.classList.add('hidden');
+            proceedToGame();
+        }, 2200);
+    }
+}
+
+function proceedToGame() {
     // Clear any active score animation
     if (state.scoreInterval) {
         clearInterval(state.scoreInterval);
@@ -413,7 +534,7 @@ function showScreen(screen) {
 
 // Phase 1: Go to Betting Screen
 function goToBetScreen() {
-    const question = questions[state.currentQuestionIndex];
+    const question = activeQuestions[state.currentQuestionIndex];
     
     // Set Header
     questionProgress.textContent = `${state.currentQuestionIndex + 1} / 10`;
@@ -461,7 +582,7 @@ function selectBet(amount) {
 
 // Phase 2: Go to Answering Screen
 function goToAnswerScreen() {
-    const question = questions[state.currentQuestionIndex];
+    const question = activeQuestions[state.currentQuestionIndex];
     
     answerQuestionText.textContent = question.question;
     currentBetBadge.textContent = state.currentBet;
@@ -496,7 +617,7 @@ function processAnswer(selectedIndex, isTimeout) {
     state.activePhase = null;
     stopTimer();
     
-    const question = questions[state.currentQuestionIndex];
+    const question = activeQuestions[state.currentQuestionIndex];
     const isCorrect = !isTimeout && selectedIndex === question.answer;
     
     const answerButtons = answersContainer.querySelectorAll('.answer-btn');

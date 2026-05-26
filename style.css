@@ -915,3 +915,32 @@ body {
         grid-template-columns: 1fr;
     }
 }
+
+/* AI Loading Status Feedback styling */
+.start-status {
+    margin-top: 15px;
+    font-size: 0.9rem;
+    text-align: center;
+    color: var(--text-muted);
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border-color);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    animation: fadeIn var(--transition-speed) forwards;
+}
+
+.start-status.error {
+    color: var(--color-error);
+    border-color: rgba(231, 76, 60, 0.25);
+    background: rgba(231, 76, 60, 0.05);
+}
+
+.start-status.success {
+    color: var(--color-success);
+    border-color: rgba(46, 204, 113, 0.25);
+    background: rgba(46, 204, 113, 0.05);
+}
