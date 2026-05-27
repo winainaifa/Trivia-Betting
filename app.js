@@ -1,6 +1,6 @@
 // If you host the frontend on GitHub Pages, paste your Vercel backend URL here (e.g. "https://your-project.vercel.app")
 // If you host both frontend and backend on Vercel, leave it empty "" to use a relative path.
-const BACKEND_API_URL = "";
+const BACKEND_API_URL = "https://trivia-betting.vercel.app/";
 
 // Global array for questions currently being played
 let activeQuestions = [];
