@@ -395,27 +395,39 @@ startGameBtn.addEventListener('click', () => {
 async function fetchAIQuestions() {
     const endpoint = BACKEND_API_URL ? `${BACKEND_API_URL}/api/questions` : '/api/questions';
     
-    const response = await fetch(endpoint, {
-        method: "GET",
-        headers: {
-            "Content-Type": "application/json"
-        }
-    });
+    let response;
+    try {
+        response = await fetch(endpoint, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            }
+        });
+    } catch (netErr) {
+        throw new Error(`ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ (Failed to fetch: ${netErr.message})`);
+    }
     
     if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        let errDetails = `HTTP error! status: ${response.status}`;
+        try {
+            const errJson = await response.json();
+            if (errJson && errJson.error) {
+                errDetails = errJson.error;
+            }
+        } catch(e) {}
+        throw new Error(errDetails);
     }
     
     const parsedQuestions = await response.json();
     
     if (!Array.isArray(parsedQuestions) || parsedQuestions.length !== 10) {
-        throw new Error("AI returned incorrect questions count or structure.");
+        throw new Error("โครงสร้างคำถามที่ AI ส่งกลับมาไม่ถูกต้อง");
     }
     
     // Basic verification
     parsedQuestions.forEach((q, idx) => {
         if (!q.question || !Array.isArray(q.options) || q.options.length !== 4 || typeof q.answer !== 'number') {
-            throw new Error(`Schema mismatch at index ${idx}`);
+            throw new Error(`คำถามข้อที่ ${idx + 1} รูปแบบฟิลด์ไม่ตรงตามข้อกำหนด`);
         }
     });
     
@@ -462,7 +474,7 @@ async function setupNewGame() {
     } catch (err) {
         console.warn("Gemini API failed or key missing. Swapping to local fallback pool.", err);
         
-        startStatus.textContent = "ไม่สามารถเชื่อมต่อ AI ได้ กำลังสลับไปใช้คำถามสำรอง...";
+        startStatus.innerHTML = `ไม่สามารถเชื่อมต่อ AI ได้ (${err.message})<br><small style="font-size: 0.8em; opacity: 0.8;">กำลังสลับไปใช้คำถามสำรอง...</small>`;
         startStatus.className = "start-status error";
         
         // Copy the local fallback questions directly to keep the easy-to-hard sorting order
@@ -474,7 +486,7 @@ async function setupNewGame() {
             restartGameBtn.disabled = false;
             startStatus.classList.add('hidden');
             proceedToGame();
-        }, 2200);
+        }, 3500);
     }
 }
 
