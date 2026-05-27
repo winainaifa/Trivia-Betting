@@ -1,5 +1,6 @@
-// !!! REPLACE THIS WITH YOUR ACTUAL GEMINI API KEY FROM GOOGLE AI STUDIO !!!
-const GEMINI_API_KEY = "AIzaSyBpvQA_jJeR_TjYhs5VnJiGvRgxmZsMXds";
+// If you host the frontend on GitHub Pages, paste your Vercel backend URL here (e.g. "https://your-project.vercel.app")
+// If you host both frontend and backend on Vercel, leave it empty "" to use a relative path.
+const BACKEND_API_URL = "";
 
 // Global array for questions currently being played
 let activeQuestions = [];
@@ -390,52 +391,22 @@ startGameBtn.addEventListener('click', () => {
     setupNewGame();
 });
 
-// Fetch questions dynamically from Google Gemini 1.5 Flash API
+// Fetch questions dynamically from Google Gemini 2.5 Flash API via Backend Proxy
 async function fetchAIQuestions() {
-    if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_API_KEY_HERE" || GEMINI_API_KEY.trim() === "") {
-        throw new Error("API Key is missing or using default placeholder.");
-    }
+    const endpoint = BACKEND_API_URL ? `${BACKEND_API_URL}/api/questions` : '/api/questions';
     
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-    
-    const prompt = "สร้างคำถามทายปัญหาความรู้ทั่วไปเกี่ยวกับประวัติศาสตร์ ภูมิศาสตร์ วิทยาศาสตร์ วัฒนธรรม และข้อเท็จจริงจากทั่วโลกจำนวน 10 ข้อ " +
-                   "โดยเรียงลำดับระดับความยากจากง่ายไปยากที่สุด (ข้อ 1 ง่ายที่สุด และค่อยๆ ยากขึ้นจนถึงข้อ 10 ยากที่สุดระดับเซียนตอบ) " +
-                   "ให้ผลลัพธ์เป็น JSON Array ที่มีโครงสร้างตรงตามรูปแบบต่อไปนี้เท่านั้น:\n" +
-                   "[\n" +
-                   "  {\n" +
-                   "    \"question\": \"คำถาม...\",\n" +
-                   "    \"options\": [\"ตัวเลือก 1\", \"ตัวเลือก 2\", \"ตัวเลือก 3\", \"ตัวเลือก 4\"],\n" +
-                   "    \"answer\": 0\n" +
-                   "  }\n" +
-                   "]\n" +
-                   "ฟิลด์ answer ต้องเป็นเลขจำนวนเต็มดัชนี 0 ถึง 3 เท่านั้น ห้ามส่งข้อความคำนำหรือลงท้ายใดๆ หรือเครื่องหมาย markdown codeblock ให้ส่งเฉพาะเนื้อหา JSON อาเรย์ตรงๆ";
-    
-    const payload = {
-        contents: [{
-            parts: [{
-                text: prompt
-            }]
-        }],
-        generationConfig: {
-            responseMimeType: "application/json"
-        }
-    };
-    
-    const response = await fetch(url, {
-        method: "POST",
+    const response = await fetch(endpoint, {
+        method: "GET",
         headers: {
             "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
+        }
     });
     
     if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
     }
     
-    const data = await response.json();
-    const rawText = data.candidates[0].content.parts[0].text;
-    const parsedQuestions = JSON.parse(rawText.trim());
+    const parsedQuestions = await response.json();
     
     if (!Array.isArray(parsedQuestions) || parsedQuestions.length !== 10) {
         throw new Error("AI returned incorrect questions count or structure.");
