@@ -393,7 +393,8 @@ startGameBtn.addEventListener('click', () => {
 
 // Fetch questions dynamically from Google Gemini 2.5 Flash API via Backend Proxy
 async function fetchAIQuestions() {
-    const endpoint = BACKEND_API_URL ? `${BACKEND_API_URL}/api/questions` : '/api/questions';
+    const cleanUrl = BACKEND_API_URL.trim().replace(/\/+$/, "");
+    const endpoint = cleanUrl ? `${cleanUrl}/api/questions` : '/api/questions';
     
     let response;
     try {
