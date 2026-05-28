@@ -69,7 +69,7 @@ let state = {
     score: 100,
     currentQuestionIndex: 0,
     currentBet: 0,
-    timeLeft: 10,
+    timeLeft: 15,
     timerInterval: null,
     scoreInterval: null,
     isMuted: false,
@@ -349,7 +349,7 @@ function generateBets(score) {
 // Timer Functions
 function startTimer(phase) {
     clearInterval(state.timerInterval);
-    state.timeLeft = 10;
+    state.timeLeft = 15;
     state.activePhase = phase;
     
     updateTimerUI();
@@ -370,15 +370,15 @@ function startTimer(phase) {
 function updateTimerUI() {
     timerText.textContent = state.timeLeft;
     
-    // Scale the countdown bar horizontally
-    const scale = state.timeLeft / 10;
+    // Scale the countdown bar horizontally (15 seconds total)
+    const scale = state.timeLeft / 15;
     timerBar.style.transform = `scaleX(${scale})`;
     
     // Alert state colors
     timerBar.classList.remove('warning', 'critical');
-    if (state.timeLeft <= 3) {
+    if (state.timeLeft <= 4) {
         timerBar.classList.add('critical');
-    } else if (state.timeLeft <= 5) {
+    } else if (state.timeLeft <= 7) {
         timerBar.classList.add('warning');
     }
 }
