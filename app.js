@@ -314,20 +314,36 @@ muteBtn.addEventListener('click', () => {
     }
 });
 
-// Dynamic Bet Calculations
+// Dynamic Bet Calculations (Scales dynamically with score to maintain excitement)
 function generateBets(score) {
-    if (score >= 60) {
-        return [10, 30, 50, score];
-    }
     if (score <= 4) {
         return [1, Math.min(2, score), Math.min(3, score), score];
     }
-    // Interpolated values for middle points
-    const opt1 = Math.max(1, Math.floor(score * 0.2));
-    const opt2 = Math.max(opt1 + 1, Math.floor(score * 0.4));
-    const opt3 = Math.max(opt2 + 1, Math.floor(score * 0.7));
-    const opt4 = score;
-    return [opt1, opt2, opt3, opt4];
+    
+    // Scale percentages for all scores
+    let opt1 = Math.max(5, Math.floor(score * 0.15));
+    let opt2 = Math.max(opt1 + 5, Math.floor(score * 0.35));
+    let opt3 = Math.max(opt2 + 5, Math.floor(score * 0.65));
+    let opt4 = score;
+    
+    // Helper to round to nearest 5 or 10 for readability
+    const roundClean = (val) => {
+        if (val <= 10) return val;
+        if (val <= 50) return Math.round(val / 5) * 5;
+        return Math.round(val / 10) * 10;
+    };
+    
+    opt1 = roundClean(opt1);
+    opt2 = roundClean(opt2);
+    opt3 = roundClean(opt3);
+    
+    // Ensure strict ordering: opt1 < opt2 < opt3 < opt4
+    if (opt2 <= opt1) opt2 = opt1 + 5;
+    if (opt3 <= opt2) opt3 = opt2 + 5;
+    if (opt3 >= opt4) opt3 = Math.max(opt2 + 5, opt4 - 5);
+    if (opt2 >= opt3) opt2 = Math.max(opt1 + 5, opt3 - 5);
+    
+    return [Math.max(1, opt1), Math.max(2, opt2), Math.max(3, opt3), opt4];
 }
 
 // Timer Functions
@@ -391,10 +407,37 @@ startGameBtn.addEventListener('click', () => {
     setupNewGame();
 });
 
+// Pool of diverse topics to randomize AI question generation and prevent repetition
+const TOPIC_SETS = [
+    ["อารยธรรมโบราณ", "ดาราศาสตร์และอวกาศ", "สิ่งประดิษฐ์พลิกโลก"],
+    ["สำรวจทะเลลึก", "วรรณกรรมคลาสสิก", "ประวัติศาสตร์เอเชีย"],
+    ["วิทยาศาสตร์การแพทย์", "ศิลปะและสถาปัตยกรรม", "บุคคลสำคัญของโลก"],
+    ["สัตว์โลกแปลกประหลาด", "ภูมิศาสตร์เกาะและมหาสมุทร", "ภาษาและนิรุกติศาสตร์"],
+    ["ตำนานและเรื่องเล่าปรัมปรา", "เคมีในห้องอาหาร", "ฟิสิกส์ในชีวิตประจำวัน"],
+    ["ประวัติศาสตร์คอมพิวเตอร์", "เครื่องดนตรีคลาสสิก", "อาหารและวัฒนธรรมการกิน"],
+    ["โบราณคดีอียิปต์และเมโสโปเตเมีย", "ปรากฏการณ์ธรรมชาติสุดแปลก", "วิวัฒนาการสิ่งมีชีวิต"],
+    ["กีฬาโอลิมปิกและประวัติศาสตร์กีฬา", "คดีปริศนาที่ยังไขไม่ได้", "การสำรวจอวกาศยุคใหม่"],
+    ["พฤกษศาสตร์น่ารู้", "ระบบนิเวศน์ที่แปลกที่สุด", "ปรัชญาและแนวคิดของโลก"],
+    ["ประวัติศาสตร์ยานพาหนะและการเดินทาง", "การสำรวจขั้วโลก", "วิทยาศาสตร์ทางทะเล"],
+    ["ประวัติศาสตร์ยุคกลาง", "วิทยาการหุ่นยนต์และ AI", "สถาปัตยกรรมสิ่งก่อสร้างสุดมหัศจรรย์"],
+    ["ตำนานนอร์สและกรีกโบราณ", "ฟอสซิลและไดโนเสาร์", "ภัยพิบัติทางธรรมชาติครั้งใหญ่ในประวัติศาสตร์"],
+    ["เศรษฐศาสตร์ในชีวิตประจำวัน", "ภาพยนตร์และวงการฮอลลีวูด", "สัตว์ปีกและโลกของการบิน"],
+    ["ปริศนาคณิตศาสตร์", "วัฒนธรรมญี่ปุ่นโบราณ", "การเดินทางรอบโลกของนักสำรวจยุคแรก"],
+    ["จุลชีววิทยาและโลกของไวรัส", "ประวัติศาสตร์การพิมพ์และหนังสือ", "ภูเขาไฟและแผ่นดินไหว"]
+];
+
 // Fetch questions dynamically from Google Gemini 2.5 Flash API via Backend Proxy
 async function fetchAIQuestions() {
     const cleanUrl = BACKEND_API_URL.trim().replace(/\/+$/, "");
-    const endpoint = cleanUrl ? `${cleanUrl}/api/questions` : '/api/questions';
+    
+    // Pick a random set of topics to inject into query parameters to prevent duplicate questions
+    const randomSet = TOPIC_SETS[Math.floor(Math.random() * TOPIC_SETS.length)];
+    const topicsStr = encodeURIComponent(randomSet.join(","));
+    const seed = Math.floor(Math.random() * 1000000);
+    
+    const endpoint = cleanUrl 
+        ? `${cleanUrl}/api/questions?topics=${topicsStr}&seed=${seed}` 
+        : `/api/questions?topics=${topicsStr}&seed=${seed}`;
     
     let response;
     try {
@@ -450,8 +493,8 @@ async function setupNewGame() {
     gameHeader.classList.add('hidden');
     timerWrapper.classList.add('hidden');
     
-    // Show Loading feedback and disable all play buttons to prevent double click
-    startStatus.textContent = "กำลังเชื่อมต่อ Gemini AI เพื่อสร้างคำถามใหม่...";
+    // Show Loading feedback with animated spinner and disable all play buttons to prevent double click
+    startStatus.innerHTML = `<i class="fas fa-spinner fa-spin" style="color: var(--color-primary);"></i> กำลังเชื่อมต่อ Gemini AI เพื่อสร้างคำถามใหม่...`;
     startStatus.className = "start-status";
     startStatus.classList.remove('hidden');
     
@@ -462,7 +505,7 @@ async function setupNewGame() {
     try {
         activeQuestions = await fetchAIQuestions();
         
-        startStatus.textContent = "สร้างคำถามสำเร็จ!";
+        startStatus.innerHTML = `<i class="fas fa-check-circle" style="color: var(--color-success);"></i> สร้างคำถามสำเร็จ!`;
         startStatus.className = "start-status success";
         
         setTimeout(() => {
@@ -475,7 +518,7 @@ async function setupNewGame() {
     } catch (err) {
         console.warn("Gemini API failed or key missing. Swapping to local fallback pool.", err);
         
-        startStatus.innerHTML = `ไม่สามารถเชื่อมต่อ AI ได้ (${err.message})<br><small style="font-size: 0.8em; opacity: 0.8;">กำลังสลับไปใช้คำถามสำรอง...</small>`;
+        startStatus.innerHTML = `<i class="fas fa-exclamation-triangle" style="color: var(--color-error);"></i> ไม่สามารถเชื่อมต่อ AI ได้ (${err.message})<br><small style="font-size: 0.8em; opacity: 0.8; margin-top: 5px; display: block;">กำลังสลับไปใช้คำถามสำรอง...</small>`;
         startStatus.className = "start-status error";
         
         // Copy the local fallback questions directly to keep the easy-to-hard sorting order

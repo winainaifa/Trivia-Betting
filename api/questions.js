@@ -28,17 +28,28 @@ export default async function handler(req, res) {
     try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
         
-        const prompt = "สร้างคำถามทายปัญหาความรู้ทั่วไปเกี่ยวกับประวัติศาสตร์ ภูมิศาสตร์ วิทยาศาสตร์ วัฒนธรรม และข้อเท็จจริงจากทั่วโลกจำนวน 10 ข้อ " +
-                       "โดยเรียงลำดับระดับความยากจากง่ายไปยากที่สุด (ข้อ 1 ง่ายที่สุด และค่อยๆ ยากขึ้นจนถึงข้อ 10 ยากที่สุดระดับเซียนตอบ) " +
-                       "ให้ผลลัพธ์เป็น JSON Array ที่มีโครงสร้างตรงตามรูปแบบต่อไปนี้เท่านั้น:\n" +
-                       "[\n" +
-                       "  {\n" +
-                       "    \"question\": \"คำถาม...\",\n" +
-                       "    \"options\": [\"ตัวเลือก 1\", \"ตัวเลือก 2\", \"ตัวเลือก 3\", \"ตัวเลือก 4\"],\n" +
-                       "    \"answer\": 0\n" +
-                       "  }\n" +
-                       "]\n" +
-                       "ฟิลด์ answer ต้องเป็นเลขจำนวนเต็มดัชนี 0 ถึง 3 เท่านั้น ห้ามส่งข้อความคำนำหรือลงท้ายใดๆ หรือเครื่องหมาย markdown codeblock ให้ส่งเฉพาะเนื้อหา JSON อาเรย์ตรงๆ";
+        // Extract query parameters for dynamic topic generation to prevent duplicates
+        const urlObj = new URL(req.url || '', `http://${req.headers?.host || 'localhost'}`);
+        const queryParams = Object.fromEntries(urlObj.searchParams.entries());
+        const topics = req.query?.topics || queryParams.topics || "";
+        
+        let topicInstruction = "";
+        if (topics) {
+            topicInstruction = `โดยคำถามควรเน้นสุ่มเลือกหัวข้อจากกลุ่มนี้เป็นหลัก: "${decodeURIComponent(topics)}" `;
+        }
+        
+        const prompt = `สร้างคำถามทายปัญหาความรู้ทั่วไปและข้อเท็จจริงที่น่าสนใจจากทั่วโลกจำนวน 10 ข้อ ${topicInstruction}` +
+                       `โดยเรียงลำดับระดับความยากจากง่ายไปยากที่สุด (ข้อ 1 ง่ายที่สุด และค่อยๆ ยากขึ้นจนถึงข้อ 10 ยากที่สุดระดับเซียนตอบ) ` +
+                       `คำถามต้องมีความสร้างสรรค์ แปลกใหม่ ไม่ซ้ำซากจำเจ (หลีกเลี่ยงข้อสอบยอดฮิต เช่น เมืองหลวงฝรั่งเศส, แม่น้ำที่ยาวที่สุดในโลก, ใครประดิษฐ์หลอดไฟ) ` +
+                       `ให้ผลลัพธ์เป็น JSON Array ที่มีโครงสร้างตรงตามรูปแบบต่อไปนี้เท่านั้น:\n` +
+                       `[\n` +
+                       `  {\n` +
+                       `    "question": "คำถาม...",\n` +
+                       `    "options": ["ตัวเลือก 1", "ตัวเลือก 2", "ตัวเลือก 3", "ตัวเลือก 4"],\n` +
+                       `    "answer": 0\n` +
+                       `  }\n` +
+                       `]\n` +
+                       `ฟิลด์ answer ต้องเป็นเลขจำนวนเต็มดัชนี 0 ถึง 3 เท่านั้น ห้ามส่งข้อความคำนำหรือลงท้ายใดๆ หรือเครื่องหมาย markdown codeblock ให้ส่งเฉพาะเนื้อหา JSON อาเรย์ตรงๆ`;
         
         const payload = {
             contents: [{
